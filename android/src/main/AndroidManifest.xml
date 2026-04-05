@@ -29,7 +29,7 @@
         android:name="android.hardware.touchscreen"
         android:required="false" />
 
-    <application
+    <application android:localeConfig="@xml/locales_config.xml"
         android:name=".App"
         android:allowBackup="false"
         android:banner="@drawable/tv_banner"

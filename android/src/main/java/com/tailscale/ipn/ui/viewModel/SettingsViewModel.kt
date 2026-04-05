@@ -3,6 +3,8 @@
 
 package com.tailscale.ipn.ui.viewModel
 
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.os.LocaleListCompat
 import androidx.lifecycle.viewModelScope
 import com.tailscale.ipn.ui.localapi.Client
 import com.tailscale.ipn.ui.notifier.Notifier
@@ -34,6 +36,24 @@ class SettingsViewModel : IpnViewModel() {
   val tailNetLockEnabled: StateFlow<Boolean?> = MutableStateFlow(null)
   // True if tailscaleDNS is enabled. nil if not yet known.
   val corpDNSEnabled: StateFlow<Boolean?> = MutableStateFlow(null)
+
+  // Current App Language settings tag
+  val currentAppLanguage: StateFlow<String> =
+      MutableStateFlow(
+          AppCompatDelegate.getApplicationLocales().toLanguageTags().let {
+            if (it.isEmpty()) "system" else it.split(",").firstOrNull() ?: "system"
+          })
+
+  fun setAppLanguage(languageTag: String) {
+    val locales =
+        if (languageTag == "system") {
+          LocaleListCompat.getEmptyLocaleList()
+        } else {
+          LocaleListCompat.forLanguageTags(languageTag)
+        }
+    AppCompatDelegate.setApplicationLocales(locales)
+    (currentAppLanguage as MutableStateFlow).value = languageTag
+  }
 
   init {
     viewModelScope.launch {

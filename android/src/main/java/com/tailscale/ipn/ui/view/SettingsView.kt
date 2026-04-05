@@ -12,9 +12,14 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.AlertDialog
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalUriHandler
@@ -59,6 +64,9 @@ fun SettingsView(
   val showTailnetLock by MDMSettings.manageTailnetLock.flow.collectAsState()
   val useTailscaleSubnets by MDMSettings.useTailscaleSubnets.flow.collectAsState()
 
+  val currentLanguage by viewModel.currentAppLanguage.collectAsState()
+  var showLanguageDialog by remember { mutableStateOf(false) }
+
   Scaffold(
       topBar = {
         Header(titleRes = R.string.settings_title, onBack = settingsNav.onNavigateBackHome)
@@ -77,6 +85,18 @@ fun SettingsView(
           }
 
           Lists.SectionDivider()
+          Setting.Text(
+              // You can move these strings to strings.xml later e.g. stringResource(R.string.app_language)
+              title = "App Language",
+              subtitle =
+                  when (currentLanguage) {
+                    "en" -> "English"
+                    "zh" -> "中文"
+                    else -> "System Default"
+                  },
+              onClick = { showLanguageDialog = true })
+
+          Lists.ItemDivider()
           Setting.Text(
               R.string.dns_settings,
               subtitle =
@@ -132,6 +152,29 @@ fun SettingsView(
             Lists.SectionDivider()
             Lists.MutedHeader(text = stringResource(R.string.internal_debug_options))
             Setting.Text(R.string.mdm_settings, onClick = settingsNav.onNavigateToMDMSettings)
+          }
+
+          if (showLanguageDialog) {
+            AlertDialog(
+                onDismissRequest = { showLanguageDialog = false },
+                title = { Text("App Language") },
+                text = {
+                  Column {
+                    val options = listOf("system" to "System Default", "en" to "English", "zh" to "中文")
+                    options.forEach { (tag, label) ->
+                      ListItem(
+                          modifier = Modifier.clickable {
+                            viewModel.setAppLanguage(tag)
+                            showLanguageDialog = false
+                          },
+                          colors = MaterialTheme.colorScheme.listItem,
+                          headlineContent = { Text(label) })
+                    }
+                  }
+                },
+                confirmButton = {
+                  TextButton(onClick = { showLanguageDialog = false }) { Text("Close") }
+                })
           }
         }
       }
